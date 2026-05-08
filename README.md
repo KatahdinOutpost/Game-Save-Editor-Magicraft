@@ -6,3 +6,5 @@ This tool which is web browser based can be launched by opening index.html. It w
 Magicraft save files are stored on Windows PCs at C:\Users\[YourName]\AppData\LocalLow\bolang\Magicraft. 
 
 Upload your WordData file. Each one is related to one of 3 save slots. WorldData contains the character information.
+
+<img width="1483" height="867" alt="image" src="https://github.com/user-attachments/assets/510a1cd3-4f41-43ba-8417-dd7c422bd6ac" />
