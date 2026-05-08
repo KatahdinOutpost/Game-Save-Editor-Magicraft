@@ -7,4 +7,6 @@ Magicraft save files are stored on Windows PCs at C:\Users\[YourName]\AppData\Lo
 
 Upload your WordData file. Each one is related to one of 3 save slots. WorldData contains the character information.
 
+https://katahdinoutpost.github.io/Game-Save-Editor-Magicraft/
+
 <img width="1483" height="867" alt="image" src="https://github.com/user-attachments/assets/510a1cd3-4f41-43ba-8417-dd7c422bd6ac" />
