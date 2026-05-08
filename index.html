@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Save Editor — XOR Decoder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #13182a;
+            --bg-tertiary: #1a2340;
+            --border: #2a3355;
+            --accent: #00d4ff;
+            --accent-danger: #ff4757;
+            --accent-success: #2ecc71;
+            --text-primary: #e8f0ff;
+            --text-secondary: #a8b8d8;
+            --text-muted: #6a7a98;
+            --monospace: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        .intro-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 6px;
+            margin: 12px;
+            padding: 14px 16px;
+            color: var(--text-secondary);
+        }
+
+        .intro-box h2 {
+            color: var(--accent);
+            font-size: 16px;
+            margin-bottom: 8px;
+            letter-spacing: 0.4px;
+        }
+
+        .intro-box p {
+            margin-bottom: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .intro-box code {
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 1px 4px;
+            font-family: var(--monospace);
+            font-size: 11px;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            gap: 0;
+            background: var(--bg-primary);
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-left {
+            flex: 0 0 300px;
+        }
+
+        .panel-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .header {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tertiary);
+        }
+
+        .header h1 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.08);
+        }
+
+        .status-box {
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+        }
+
+        .status-box.success {
+            border-color: var(--accent-success);
+            background: rgba(46, 204, 113, 0.08);
+            color: var(--accent-success);
+        }
+
+        .status-box.error {
+            border-color: var(--accent-danger);
+            background: rgba(255, 71, 87, 0.08);
+            color: var(--accent-danger);
+        }
+
+        .section {
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .field-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .field-input {
+            width: 70px;
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            border-radius: 3px;
+            font-family: var(--monospace);
+            font-size: 12px;
+            text-align: right;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .difficulty-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .difficulty-checkbox:hover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .difficulty-checkbox input {
+            cursor: pointer;
+        }
+
+        .difficulty-checkbox.checked {
+            background: rgba(46, 204, 113, 0.1);
+            border-color: var(--accent-success);
+        }
+
+        .difficulty-checkbox label {
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .gallery-section {
+            margin-bottom: 14px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .gallery-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .gallery-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(0, 212, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .gallery-dropdown {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-primary);
+        }
+
+        .gallery-search {
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 11px;
+            width: 100%;
+        }
+
+        .gallery-search:focus {
+            outline: none;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .gallery-option {
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .gallery-option:last-child {
+            border-bottom: none;
+        }
+
+        .gallery-option:hover {
+            background: rgba(0, 212, 255, 0.08);
+        }
+
+        .gallery-option.unlocked {
+            background: rgba(46, 204, 113, 0.06);
+        }
+
+        .gallery-option input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .gallery-option-name {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .gallery-option-id {
+            color: var(--text-muted);
+            font-family: var(--monospace);
+            font-size: 10px;
+            margin-left: auto;
+        }
+
+        .gallery-option.unlocked .gallery-option-id {
+            color: var(--accent-success);
+        }
+
+        .gallery-buttons {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        button {
+            flex: 1;
+            padding: 6px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.08);
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        button.primary:hover {
+            background: rgba(0, 212, 255, 0.8);
+        }
+
+        button.danger {
+            color: var(--accent-danger);
+            border-color: var(--accent-danger);
+        }
+
+        button.danger:hover {
+            background: rgba(255, 71, 87, 0.08);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .json-preview {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: var(--monospace);
+            color: var(--text-primary);
+            width: 100%;
+            height: 100%;
+            resize: none;
+            border: none;
+        }
+
+        .json-preview:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 1px var(--accent);
+        }
+
+        .download-section {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .warning-banner {
+            padding: 8px 10px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 4px;
+            font-size: 11px;
+            color: #ffc107;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .warning-banner strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="intro-box">
+        <h2>Game Save Editor for Magicraft</h2>
+        <p>This tool will decode the save file with XOR encryption for JSON editing. Upon saving the changes, the file will be encoded with encryption again.</p>
+        <p>Magicraft save files are stored on Windows PCs at <code>C:\Users\[YourName]\AppData\LocalLow\bolang\Magicraft</code>.</p>
+        <p>Upload your <strong>WorldData</strong> file. Each one is related to one of 3 save slots. <strong>WorldData</strong> contains the character information.</p>
+    </div>
+    <div class="container">
+        <!-- LEFT PANEL: Editor Controls -->
+        <div class="panel panel-left">
+            <div class="header">
+                <h1>SAVE EDITOR</h1>
+                <p>XOR Decoder v2.0</p>
+            </div>
+
+            <div class="scroll-area">
+                <!-- File Upload -->
+                <div class="section">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".Json,.json" />
+                        <label for="fileInput" class="file-input-label">📁 Load Save</label>
+                    </div>
+                    <div id="fileStatus" class="status-box" style="display: none;"></div>
+                </div>
+
+                <!-- Quick Edit Fields -->
+                <div class="section" id="quickEditSection" style="display: none;">
+                    <div class="section-title">Quick Edit</div>
+
+                    <!-- Difficulty -->
+                    <div class="field-group" style="margin-bottom: 10px;">
+                        <div class="field-row">
+                            <span class="field-label">Current Difficulty</span>
+                            <input type="number" id="selectedDifficulty" class="field-input" min="0" />
+                        </div>
+                    </div>
+
+                    <!-- Resources / Unlocks -->
+                    <div class="field-group">
+                        <div class="field-row">
+                            <span class="field-label">Unlocked Sets</span>
+                            <input type="number" id="unlockedSets" class="field-input" min="0" />
+                        </div>
+
+                        <div class="field-row">
+                            <span class="field-label">Magic Crystal</span>
+                            <input type="number" id="magicCrystalCount" class="field-input" min="0" />
+                        </div>
+
+                        <div class="field-row">
+                            <span class="field-label">Ancient Blood</span>
+                            <input type="number" id="ancientBloodCount" class="field-input" min="0" />
+                        </div>
+
+                        <div class="field-row">
+                            <span class="field-label">Chaos Core</span>
+                            <input type="number" id="chaosCoreCount" class="field-input" min="0" />
+                        </div>
+                    </div>
+
+                    <!-- Finished Difficulties -->
+                    <div style="margin-top: 10px;">
+                        <div class="section-title" style="margin-bottom: 6px;">Finished Difficulties</div>
+                        <div class="difficulty-grid" id="finishedDifficultyGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Gallery Editors -->
+                <div class="section" id="gallerySection" style="display: none;">
+                    <div class="section-title">Gallery Unlocks</div>
+                    <div id="galleryEditors"></div>
+                </div>
+
+                <!-- Downloads -->
+                <div class="section" id="downloadSection" style="display: none;">
+                    <div class="download-section">
+                        <div class="warning-banner">
+                            <strong>⚠ Back Up First</strong>
+                            Always back up before replacing.
+                        </div>
+                        <button class="primary" id="downloadJSON" style="margin-bottom: 6px;">⬇ JSON Backup</button>
+                        <button class="primary" id="downloadSave">⬇ Encoded Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Raw JSON Preview -->
+        <div class="panel panel-main">
+            <div class="header">
+                <h1>JSON Preview</h1>
+                <p id="jsonStats" style="font-size: 10px; color: var(--text-muted);">Load a save file to see structure</p>
+            </div>
+            <div class="scroll-area">
+                <textarea id="jsonPreview" class="json-preview" placeholder="Load a save file to edit JSON line by line"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const XOR_KEY = 'Encrypt';
+        let currentData = null;
+        let currentFileSize = 0;
+
+        // ============ XOR Encoding/Decoding ============
+        function stringToUtf8Bytes(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+        function utf8BytesToString(bytes) {
+            const decoder = new TextDecoder('utf-8');
+            return decoder.decode(bytes);
+        }
+
+        function xorBytes(bytes, key) {
+            const result = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) {
+                result[i] = bytes[i] ^ key.charCodeAt(i % key.length);
+            }
+            return result;
+        }
+
+        // ============ Database Definitions ============
+        const SPELL_DATABASE = {
+            700101: 'Pop', 700102: 'Pop+', 700103: 'Pop++',
+            700201: 'Skull of the Cthulhu', 700202: 'Skull of the Cthulhu+', 700203: 'Skull of the Cthulhu++',
+            700301: 'Hand of the Cthulhu', 700302: 'Hand of the Cthulhu+', 700303: 'Hand of the Cthulhu++',
+            700401: 'Pillar of Light', 700402: 'Pillar of Light+', 700403: 'Pillar of Light++',
+            700501: 'Autonomous Grimoire', 700502: 'Autonomous Grimoire+', 700503: 'Autonomous Grimoire++',
+            700601: 'Genie',
+            700701: 'Exploding Hive', 700702: 'Exploding Hive+', 700703: 'Exploding Hive++'
+        };
+
+        const WAND_DATABASE = {
+            11: 'Damaged Excaliwood Wand Lv1', 12: 'Damaged Excaliwood Wand Lv2', 13: 'Damaged Excaliwood Wand Lv3', 14: 'Damaged Excaliwood Wand Lv4',
+            21: 'Arcane Staff', 31: 'Staff of Conjuring',
+            41: 'Swiftcaster Wand Lv1', 42: 'Swiftcaster Wand Lv2', 43: 'Swiftcaster Wand Lv3', 44: 'Swiftcaster Wand Lv4',
+            51: 'Ethereal Wand', 61: 'Straight Sword', 71: 'Nameless', 81: 'Death Scythe', 91: 'Bow', 101: 'Chromatic Alchemy Jar', 121: 'Triple Axel',
+            1001: 'Elderwood Cane', 1002: 'Toy Blade', 1003: 'Microcosmic Embrace', 1004: 'Steadfast Will', 1005: 'Featherweight Wand',
+            1006: 'Harmonic Resonance', 1007: 'Natural Convergence', 1008: 'Wooden Stick', 1009: 'Tuning Fork', 1010: 'Novice\'s Grimoire',
+            1011: 'Guiding Fable', 1012: 'Old Wand', 1013: '777', 1014: 'Time Stasis', 1015: 'Nova Wand', 1016: 'Elder\'s Grip',
+            1017: 'Frenzy Enchanter', 1018: 'Viscous Fang', 1019: 'Venomous Bite', 1020: 'Arc of Justice', 1021: 'Tricolor Scepter',
+            1022: 'Defiant Nature', 1023: 'Shamanic Dagger', 1024: 'Shattered Scepter', 1025: 'Rusty Blaster', 1026: 'Energy Reservoir',
+            1027: 'Trident', 1028: 'Soul-Devouring Orb', 1029: 'Legacy of Ancestors', 1030: 'Vow of Honor', 1031: 'Crystal Shaper',
+            1032: 'Protective Umbrella', 1033: 'Midas\' Staff', 1034: 'Rooting Grimoire',
+            2001: 'Radiant Bouquet', 2002: 'Conch Whistle', 2003: 'Sacrificial Dagger', 2004: 'Energizer Wand', 2005: 'Deed Witness',
+            2006: 'Swiftshot Staff', 2007: 'Legion Banner', 2008: 'Expanding Container', 2009: 'Double Flute', 2010: 'Trichord Lute',
+            2011: 'Sorcerer\'s Oath', 2012: 'Restless Hearth', 2013: 'Withch\'s Broomstick', 2014: 'Tome of Endless', 2015: 'Heavy Impact',
+            2016: 'Sigil of Temperance', 2017: 'Twin-headed Wand', 2018: 'Swift Spellblade', 2019: 'Book of Tranquility', 2020: 'Handy Wand',
+            2021: 'Ripple Wand', 2022: 'Portable Library', 2023: 'Wand of Convergence', 2024: 'Warlock\'s Satchel', 2025: 'Aquaflow Staff',
+            2026: 'Star Strider', 2027: 'Festive Wand', 2028: 'Granny\'s Needle', 2029: 'Voltage Stone', 2030: 'Magic Conductor',
+            2031: 'Life Crystal', 2032: 'Measuring Rod', 2033: 'Quadruple Staff',
+            4001: 'Stellar Horn', 4002: 'Serpentine Waltz', 4003: 'Asteroid', 4004: 'Energized Orb', 4005: 'Restless Fey', 4006: 'Mind Blade',
+            4007: 'Plague Bearer', 4008: 'Dormant Whisker', 4009: 'Siegemaker', 4010: 'Frozen Touch', 4011: 'Kingdom\'s Guardian', 4012: 'Dark Young',
+            4013: 'Archmage\'s Wand', 4014: 'Shapeshifter', 4015: 'Rainbow Electroweb', 4016: 'Collector\'s Staff', 4017: 'Excalibur', 4018: 'Energy Amplifier',
+            6001: 'Druid\'s Staff', 6002: 'Golden Lightning', 6003: 'Star Devourer', 6004: 'Crimson Thorn', 6005: 'Staff of Wisdom',
+            6006: 'Assault Staff', 6007: 'Ancient Wand', 6008: 'The Sourceless', 6009: 'Eternal Throne', 6010: 'Star of Origin',
+            6011: 'Ever-Spring Twig', 6012: 'Star Marrow',
+            8001: 'Wand of Focus', 8002: 'Omen of Doom', 8003: 'Clearwater Resonance', 8004: 'Shard of Time', 8005: 'Stellar Drift',
+            8006: 'Standardization', 8007: 'Kaleidoscope', 8008: 'Abundance Blessing', 8009: 'Gaia\'s Blessing'
+        };
+
+        const RELIC_DATABASE = {
+            1: 'Titan\'s Pauldrons', 2: 'Ranger\'s Boots', 3: 'Tree Spirit Pendant', 4: 'Talisman of Focus', 5: 'Replica Gloves',
+            6: 'Bloodthirsty Gaze', 7: 'Casket of Souls', 8: 'Soul Bone Armor', 9: 'Electrified Crown', 10: 'Demonbone Tail',
+            11: 'Knight\'s Boots', 12: 'Guardian Sprite', 13: 'Sprite Wings', 14: 'Prospector\'s Gloves', 15: 'Prospector\'s Vest',
+            16: 'Soulbone Mantle', 17: 'Treant Shoulderguards', 18: 'Prospector\'s Goblet', 19: 'Treant Robe', 20: 'Reaper Mask',
+            21: 'Crimson Anklet', 22: 'Merlin\'s Hat', 23: 'Merlin\'s Robe', 24: 'Fortune Earrings', 25: 'Merlin\'s Beard',
+            26: 'Healing Belt', 27: 'Endless Elixir', 28: 'Merchant\'s Bauble', 29: 'Merlin\'s Boots', 30: 'Treant Circlet',
+            34: 'Knight\'s Breasplate', 35: 'Stagnant Droplet', 36: 'Soulbone Crown', 37: 'Mask of the Hexer', 38: 'Hexagonal Die',
+            39: 'Elven Ears', 40: 'Prospector\'s Pickaxe', 41: 'Magician\'s Robe', 42: 'Four-Leaf Clover', 43: 'Prospector\'s Pickaxe',
+            44: 'Drill', 45: 'Rogue Cloak', 46: 'Hourglass of Time', 47: 'Emberheart', 48: 'Demon Mask', 49: 'Seed of Greed',
+            50: 'Hunter\'s Talisman', 51: 'Beast Fangs', 52: 'Cloud Piercer', 53: 'Wand Lens', 54: 'Knight\'s Helm', 55: 'Blade of Fury',
+            56: 'Magnifying Glass', 57: 'Wild Tentacles', 58: 'Resilient Physique', 59: 'Silver Key', 60: 'Rageful Eye', 61: 'Close Observation',
+            62: 'Blood Key', 63: 'Finite Gloves', 64: 'Explorer\'s Hat', 65: 'Infusion Hand Seal', 66: 'Black Mark', 67: 'Silver Compass',
+            68: 'Endless Chest', 69: 'Reboot Key', 70: 'Pandora\'s Box', 71: 'Wind Listening Ear', 72: 'Colorful Cloak', 73: 'Ward Charm',
+            74: 'Invisible Wings', 75: 'Berserker', 76: 'Coolant', 80: 'Second Brain', 81: 'Tonic Booster', 82: 'Lucky Bell',
+            83: 'Mind Lock Hole', 84: 'Potion Strip', 901: 'Lucky Bunny Ear', 902: 'Octagonal Die', 903: 'Scholar\'s Glasses',
+            931: 'Mirror of Vision', 932: 'Swordsman Cloak', 933: 'Bi\'an', 934: 'Reaper', 935: 'Original Shape', 936: 'Druid\'s Horn',
+            937: 'Beaked Mask', 938: 'Diving Suit', 961: 'Enhanced Harpoon Tip', 962: 'Poison Harpoon Tip', 963: 'Lightning Harpoon Tip',
+            964: 'Ice Harpoon Tip', 965: 'Flame Harpoon Tip', 966: 'Extended Harpoon Tip'
+        };
+
+        const GALLERY_FIELDS = [
+            { key: 'galleryUnlockedSpells', name: 'Spells', db: SPELL_DATABASE },
+            { key: 'galleryUnlockedWands', name: 'Wands', db: WAND_DATABASE },
+            { key: 'galleryUnlockedRelics', name: 'Relics', db: RELIC_DATABASE }
+        ];
+
+        // ============ File Handling ============
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const bytes = new Uint8Array(arrayBuffer);
+                currentFileSize = bytes.byteLength;
+
+                let jsonStr;
+                let isAlreadyDecoded = false;
+
+                try {
+                    const potentialJson = utf8BytesToString(bytes);
+                    const trimmed = potentialJson.trim();
+                    if (trimmed[0] === '{' || trimmed[0] === '[') {
+                        JSON.parse(potentialJson);
+                        jsonStr = potentialJson;
+                        isAlreadyDecoded = true;
+                    } else throw new Error('Not JSON');
+                } catch (plainJsonError) {
+                    try {
+                        const decodedBytes = xorBytes(bytes, XOR_KEY);
+                        jsonStr = utf8BytesToString(decodedBytes);
+                        const trimmed = jsonStr.trim();
+                        if (trimmed[0] !== '{' && trimmed[0] !== '[') {
+                            throw new Error(`Decoded data doesn't start with JSON`);
+                        }
+                        try {
+                            JSON.parse(jsonStr);
+                        } catch (jsonError) {
+                            const lastValidIndex = Math.max(jsonStr.lastIndexOf('}'), jsonStr.lastIndexOf(']'));
+                            if (lastValidIndex > 0) {
+                                jsonStr = jsonStr.substring(0, lastValidIndex + 1);
+                                JSON.parse(jsonStr);
+                            } else throw jsonError;
+                        }
+                        isAlreadyDecoded = false;
+                    } catch (xorError) {
+                        throw new Error(`Failed to decode: ${xorError.message}`);
+                    }
+                }
+
+                const parsed = JSON.parse(jsonStr);
+                currentData = parsed;
+
+                updateFileStatus(`✓ Loaded: ${file.name}`, 'success');
+                updateQuickEditFields();
+                updateGalleryEditors();
+                updateJsonPreview();
+                document.getElementById('downloadSection').style.display = 'block';
+
+                e.target.value = '';
+            } catch (err) {
+                console.error(err);
+                updateFileStatus(`✗ ${err.message}`, 'error');
+            }
+        });
+
+        function updateFileStatus(msg, type = 'default') {
+            const box = document.getElementById('fileStatus');
+            box.textContent = msg;
+            box.className = 'status-box ' + type;
+            box.style.display = 'block';
+        }
+
+        function setInputValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value ?? 0;
+        }
+
+        function bindNumberInput(id, fieldName) {
+            const el = document.getElementById(id);
+            if (!el || el.dataset.listenerBound === 'true') return;
+
+            el.dataset.listenerBound = 'true';
+            el.addEventListener('change', (e) => {
+                currentData[fieldName] = parseInt(e.target.value, 10) || 0;
+                updateJsonPreview();
+            });
+        }
+
+        // ============ Quick Edit Fields ============
+        function updateQuickEditFields() {
+            document.getElementById('quickEditSection').style.display = 'block';
+
+            // Basic fields
+            setInputValue('selectedDifficulty', currentData.selectedDifficulty);
+            setInputValue('magicCrystalCount', currentData.magicCrystalCount);
+            setInputValue('ancientBloodCount', currentData.ancientBloodCount);
+            setInputValue('chaosCoreCount', currentData.chaosCoreCount);
+            setInputValue('unlockedSets', currentData.unlockedSets);
+
+            // Finished difficulties
+            const finishedArray = currentData.finishedDifficulty || [];
+            const grid = document.getElementById('finishedDifficultyGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const label = document.createElement('label');
+                label.className = 'difficulty-checkbox' + (finishedArray.includes(i) ? ' checked' : '');
+                label.innerHTML = `
+                    <input type="checkbox" data-difficulty="${i}" ${finishedArray.includes(i) ? 'checked' : ''} />
+                    <label style="margin: 0; cursor: pointer;">Lvl ${i}</label>
+                `;
+                grid.appendChild(label);
+            }
+
+            // Attach listeners
+            bindNumberInput('selectedDifficulty', 'selectedDifficulty');
+            bindNumberInput('magicCrystalCount', 'magicCrystalCount');
+            bindNumberInput('ancientBloodCount', 'ancientBloodCount');
+            bindNumberInput('chaosCoreCount', 'chaosCoreCount');
+            bindNumberInput('unlockedSets', 'unlockedSets');
+
+            grid.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const difficulty = parseInt(e.target.dataset.difficulty);
+                    const finishedArray = currentData.finishedDifficulty || [];
+                    if (e.target.checked) {
+                        if (!finishedArray.includes(difficulty)) {
+                            finishedArray.push(difficulty);
+                            finishedArray.sort((a, b) => a - b);
+                        }
+                    } else {
+                        const idx = finishedArray.indexOf(difficulty);
+                        if (idx > -1) finishedArray.splice(idx, 1);
+                    }
+                    currentData.finishedDifficulty = finishedArray;
+                    updateQuickEditFields();
+                    updateJsonPreview();
+                });
+            });
+        }
+
+        // ============ Gallery Editors ============
+        function updateGalleryEditors() {
+            const container = document.getElementById('galleryEditors');
+            container.innerHTML = '';
+            document.getElementById('gallerySection').style.display = 'block';
+
+            GALLERY_FIELDS.forEach(({ key, name, db }) => {
+                const items = currentData[key] || [];
+                const unlockedSet = new Set(items);
+
+                const section = document.createElement('div');
+                section.className = 'gallery-section';
+
+                const header = document.createElement('div');
+                header.className = 'gallery-header';
+                header.innerHTML = `
+                    <span class="gallery-name">${name}</span>
+                    <span class="gallery-count">${items.length}/${Object.keys(db).length}</span>
+                `;
+
+                const dropdown = document.createElement('div');
+                dropdown.className = 'gallery-dropdown';
+
+                const search = document.createElement('input');
+                search.type = 'text';
+                search.className = 'gallery-search';
+                search.placeholder = `Search ${name.toLowerCase()}...`;
+
+                const optionsContainer = document.createElement('div');
+                Object.entries(db).forEach(([id, name]) => {
+                    const numId = Number(id);
+                    const isUnlocked = unlockedSet.has(numId);
+                    const option = document.createElement('label');
+                    option.className = 'gallery-option' + (isUnlocked ? ' unlocked' : '');
+                    option.innerHTML = `
+                        <input type="checkbox" data-key="${key}" data-id="${id}" ${isUnlocked ? 'checked' : ''} />
+                        <span class="gallery-option-name">${name}</span>
+                        <span class="gallery-option-id">${id}</span>
+                    `;
+                    optionsContainer.appendChild(option);
+                });
+
+                dropdown.appendChild(search);
+                dropdown.appendChild(optionsContainer);
+
+                search.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    optionsContainer.querySelectorAll('.gallery-option').forEach(opt => {
+                        const name = opt.querySelector('.gallery-option-name').textContent.toLowerCase();
+                        const id = opt.querySelector('.gallery-option-id').textContent;
+                        opt.style.display = (name.includes(query) || id.includes(query)) ? '' : 'none';
+                    });
+                });
+
+                const buttons = document.createElement('div');
+                buttons.className = 'gallery-buttons';
+                buttons.innerHTML = `
+                    <button class="unlock-btn" data-key="${key}" data-db-size="${Object.keys(db).length}">Unlock All</button>
+                    <button class="danger lock-btn" data-key="${key}">Lock All</button>
+                `;
+
+                buttons.querySelector('.unlock-btn').addEventListener('click', () => {
+                    currentData[key] = Object.keys(db).map(Number);
+                    updateGalleryEditors();
+                    updateJsonPreview();
+                });
+
+                buttons.querySelector('.lock-btn').addEventListener('click', () => {
+                    currentData[key] = [];
+                    updateGalleryEditors();
+                    updateJsonPreview();
+                });
+
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const fieldKey = e.target.dataset.key;
+                        const itemId = Number(e.target.dataset.id);
+                        const current = currentData[fieldKey] || [];
+                        if (e.target.checked) {
+                            if (!current.includes(itemId)) current.push(itemId);
+                        } else {
+                            const idx = current.indexOf(itemId);
+                            if (idx > -1) current.splice(idx, 1);
+                        }
+                        currentData[fieldKey] = current;
+                        updateGalleryEditors();
+                        updateJsonPreview();
+                    });
+                });
+
+                section.appendChild(header);
+                section.appendChild(dropdown);
+                section.appendChild(buttons);
+                container.appendChild(section);
+            });
+        }
+
+        // ============ JSON Editor ============
+        function updateJsonPreview() {
+            const editor = document.getElementById('jsonPreview');
+            if (!currentData) return;
+
+            const jsonStr = JSON.stringify(currentData, null, 2);
+            editor.value = jsonStr;
+            
+            const stats = document.getElementById('jsonStats');
+            stats.textContent = `${jsonStr.length} bytes | Ready to edit`;
+        }
+
+        // Listen for manual JSON edits
+        document.getElementById('jsonPreview').addEventListener('change', () => {
+            try {
+                const edited = JSON.parse(document.getElementById('jsonPreview').value);
+                currentData = edited;
+                updateQuickEditFields();
+                updateGalleryEditors();
+                document.getElementById('jsonStats').textContent = 'JSON valid ✓';
+            } catch (err) {
+                document.getElementById('jsonStats').textContent = `JSON error: ${err.message}`;
+            }
+        });
+
+        // ============ Downloads ============
+        document.getElementById('downloadJSON').addEventListener('click', () => {
+            if (!currentData) return;
+            const json = JSON.stringify(currentData, null, 2);
+            downloadFile(json, 'WorldData0.json', 'application/json');
+        });
+
+        document.getElementById('downloadSave').addEventListener('click', () => {
+            if (!currentData) return;
+            try {
+                const jsonStr = JSON.stringify(currentData);
+                const utf8Bytes = stringToUtf8Bytes(jsonStr);
+                const encodedBytes = xorBytes(utf8Bytes, XOR_KEY);
+                downloadFile(encodedBytes, 'WorldData0.Json', 'application/octet-stream');
+            } catch (err) {
+                updateFileStatus(`✗ Encoding error: ${err.message}`, 'error');
+            }
+        });
+
+        function downloadFile(content, filename, mimeType) {
+            let blob;
+            if (content instanceof Uint8Array) {
+                blob = new Blob([content], { type: mimeType });
+            } else {
+                blob = new Blob([content], { type: mimeType });
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
