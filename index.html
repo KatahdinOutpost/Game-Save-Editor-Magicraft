@@ -234,6 +234,48 @@
             gap: 6px;
         }
 
+        .set-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .set-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .set-checkbox:hover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .set-checkbox.checked {
+            background: rgba(46, 204, 113, 0.1);
+            border-color: var(--accent-success);
+        }
+
+        .set-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .small-help {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
         .difficulty-checkbox {
             display: flex;
             align-items: center;
@@ -295,7 +337,7 @@
         }
 
         .gallery-dropdown {
-            max-height: 200px;
+            max-height: 170px;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 4px;
@@ -414,6 +456,65 @@
             cursor: not-allowed;
         }
 
+
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .top-edit-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .top-edit-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 340px) 1fr;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .quick-card,
+        .gallery-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .gallery-card #galleryEditors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .json-area {
+            flex: 0 0 260px;
+            min-height: 180px;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .json-area .json-preview {
+            height: 100%;
+            min-height: 0;
+        }
+
+        @media (max-width: 1000px) {
+            .top-edit-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-left {
+                flex-basis: 260px;
+            }
+        }
+
         .json-preview {
             padding: 12px;
             background: var(--bg-tertiary);
@@ -507,54 +608,6 @@
                     <div id="fileStatus" class="status-box" style="display: none;"></div>
                 </div>
 
-                <!-- Quick Edit Fields -->
-                <div class="section" id="quickEditSection" style="display: none;">
-                    <div class="section-title">Quick Edit</div>
-
-                    <!-- Difficulty -->
-                    <div class="field-group" style="margin-bottom: 10px;">
-                        <div class="field-row">
-                            <span class="field-label">Current Difficulty</span>
-                            <input type="number" id="selectedDifficulty" class="field-input" min="0" />
-                        </div>
-                    </div>
-
-                    <!-- Resources / Unlocks -->
-                    <div class="field-group">
-                        <div class="field-row">
-                            <span class="field-label">Unlocked Sets</span>
-                            <input type="number" id="unlockedSets" class="field-input" min="0" />
-                        </div>
-
-                        <div class="field-row">
-                            <span class="field-label">Magic Crystal</span>
-                            <input type="number" id="magicCrystalCount" class="field-input" min="0" />
-                        </div>
-
-                        <div class="field-row">
-                            <span class="field-label">Ancient Blood</span>
-                            <input type="number" id="ancientBloodCount" class="field-input" min="0" />
-                        </div>
-
-                        <div class="field-row">
-                            <span class="field-label">Chaos Core</span>
-                            <input type="number" id="chaosCoreCount" class="field-input" min="0" />
-                        </div>
-                    </div>
-
-                    <!-- Finished Difficulties -->
-                    <div style="margin-top: 10px;">
-                        <div class="section-title" style="margin-bottom: 6px;">Finished Difficulties</div>
-                        <div class="difficulty-grid" id="finishedDifficultyGrid"></div>
-                    </div>
-                </div>
-
-                <!-- Gallery Editors -->
-                <div class="section" id="gallerySection" style="display: none;">
-                    <div class="section-title">Gallery Unlocks</div>
-                    <div id="galleryEditors"></div>
-                </div>
-
                 <!-- Downloads -->
                 <div class="section" id="downloadSection" style="display: none;">
                     <div class="download-section">
@@ -569,14 +622,82 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: Raw JSON Preview -->
+        <!-- RIGHT PANEL: Quick Controls + Smaller Raw JSON Preview -->
         <div class="panel panel-main">
             <div class="header">
-                <h1>JSON Preview</h1>
-                <p id="jsonStats" style="font-size: 10px; color: var(--text-muted);">Load a save file to see structure</p>
+                <h1>Editor Controls</h1>
+                <p>Use the boxes below for common edits. Raw JSON is still available at the bottom for advanced changes.</p>
             </div>
-            <div class="scroll-area">
-                <textarea id="jsonPreview" class="json-preview" placeholder="Load a save file to edit JSON line by line"></textarea>
+            <div class="main-workspace">
+                <div class="top-edit-area">
+                    <div class="top-edit-grid">
+                        <div class="quick-card">
+                            <!-- Quick Edit Fields -->
+                            <div class="section" id="quickEditSection" style="display: none;">
+                                <div class="section-title">Quick Edit</div>
+
+                                <!-- Difficulty -->
+                                <div class="field-group" style="margin-bottom: 10px;">
+                                    <div class="field-row">
+                                        <span class="field-label">Current Difficulty</span>
+                                        <input type="number" id="selectedDifficulty" class="field-input" min="0" />
+                                    </div>
+                                </div>
+
+                                <!-- Resources / Unlocks -->
+                                <div class="field-group">
+                                    <div>
+                                        <div class="field-label" style="margin-bottom: 6px;">Unlocked Sets</div>
+                                        <div id="setUnlockedSetsGrid" class="set-grid"></div>
+                                        <div class="set-actions">
+                                            <button id="upgradeUnlockedSets" type="button">Upgrade Unlocked Sets to 4</button>
+                                        </div>
+                                        <div class="small-help" style="margin-top: 6px;">
+                                            Selecting Set 3 creates <code>setUnlockedSets["3"] = 4</code> and <code>FindSet3 = true</code>. The upgrade button changes every currently unlocked set value to <code>4</code>.
+                                        </div>
+                                    </div>
+
+                                    <div class="field-row">
+                                        <span class="field-label">Magic Crystal</span>
+                                        <input type="number" id="magicCrystalCount" class="field-input" min="0" />
+                                    </div>
+
+                                    <div class="field-row">
+                                        <span class="field-label">Ancient Blood</span>
+                                        <input type="number" id="ancientBloodCount" class="field-input" min="0" />
+                                    </div>
+
+                                    <div class="field-row">
+                                        <span class="field-label">Chaos Core</span>
+                                        <input type="number" id="chaosCoreCount" class="field-input" min="0" />
+                                    </div>
+                                </div>
+
+                                <!-- Finished Difficulties -->
+                                <div style="margin-top: 10px;">
+                                    <div class="section-title" style="margin-bottom: 6px;">Finished Difficulties</div>
+                                    <div class="difficulty-grid" id="finishedDifficultyGrid"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-card">
+                            <!-- Gallery Editors -->
+                            <div class="section" id="gallerySection" style="display: none;">
+                                <div class="section-title">Gallery Unlocks</div>
+                                <div id="galleryEditors"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header">
+                    <h1>JSON Preview</h1>
+                    <p id="jsonStats" style="font-size: 10px; color: var(--text-muted);">Load a save file to see structure</p>
+                </div>
+                <div class="json-area">
+                    <textarea id="jsonPreview" class="json-preview" placeholder="Raw JSON preview and advanced editing"></textarea>
+                </div>
             </div>
         </div>
     </div>
@@ -755,6 +876,78 @@
             });
         }
 
+
+        function getSetUnlockedSetsObject() {
+            if (currentData.setUnlockedSets && typeof currentData.setUnlockedSets === 'object' && !Array.isArray(currentData.setUnlockedSets)) {
+                return currentData.setUnlockedSets;
+            }
+
+            if (currentData.SetUnlockedSets && typeof currentData.SetUnlockedSets === 'object' && !Array.isArray(currentData.SetUnlockedSets)) {
+                currentData.setUnlockedSets = currentData.SetUnlockedSets;
+                delete currentData.SetUnlockedSets;
+                return currentData.setUnlockedSets;
+            }
+
+            currentData.setUnlockedSets = {};
+            if (currentData.SetUnlockedSets !== undefined) delete currentData.SetUnlockedSets;
+            if (currentData.unlockedSets !== undefined) delete currentData.unlockedSets;
+            return currentData.setUnlockedSets;
+        }
+
+        function renderSetUnlockedSetsGrid() {
+            const grid = document.getElementById('setUnlockedSetsGrid');
+            if (!grid || !currentData) return;
+
+            const setData = getSetUnlockedSetsObject();
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 12; i++) {
+                const setId = String(i);
+                const isUnlocked = Object.prototype.hasOwnProperty.call(setData, setId);
+                const label = document.createElement('label');
+                label.className = 'set-checkbox' + (isUnlocked ? ' checked' : '');
+                label.innerHTML = `
+                    <input type="checkbox" data-set-id="${setId}" ${isUnlocked ? 'checked' : ''} />
+                    <span>Set ${setId}</span>
+                `;
+                grid.appendChild(label);
+            }
+
+            grid.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const setId = e.target.dataset.setId;
+                    const setData = getSetUnlockedSetsObject();
+
+                    if (e.target.checked) {
+                        setData[setId] = 4;
+                        currentData[`FindSet${setId}`] = true;
+                    } else {
+                        delete setData[setId];
+                        delete currentData[`FindSet${setId}`];
+                    }
+
+                    renderSetUnlockedSetsGrid();
+                    updateJsonPreview();
+                });
+            });
+        }
+
+        function bindUpgradeUnlockedSetsButton() {
+            const btn = document.getElementById('upgradeUnlockedSets');
+            if (!btn || btn.dataset.listenerBound === 'true') return;
+
+            btn.dataset.listenerBound = 'true';
+            btn.addEventListener('click', () => {
+                const setData = getSetUnlockedSetsObject();
+                Object.keys(setData).forEach(setId => {
+                    setData[setId] = 4;
+                    currentData[`FindSet${setId}`] = true;
+                });
+                renderSetUnlockedSetsGrid();
+                updateJsonPreview();
+            });
+        }
+
         // ============ Quick Edit Fields ============
         function updateQuickEditFields() {
             document.getElementById('quickEditSection').style.display = 'block';
@@ -764,7 +957,7 @@
             setInputValue('magicCrystalCount', currentData.magicCrystalCount);
             setInputValue('ancientBloodCount', currentData.ancientBloodCount);
             setInputValue('chaosCoreCount', currentData.chaosCoreCount);
-            setInputValue('unlockedSets', currentData.unlockedSets);
+            renderSetUnlockedSetsGrid();
 
             // Finished difficulties
             const finishedArray = currentData.finishedDifficulty || [];
@@ -785,7 +978,7 @@
             bindNumberInput('magicCrystalCount', 'magicCrystalCount');
             bindNumberInput('ancientBloodCount', 'ancientBloodCount');
             bindNumberInput('chaosCoreCount', 'chaosCoreCount');
-            bindNumberInput('unlockedSets', 'unlockedSets');
+            bindUpgradeUnlockedSetsButton();
 
             grid.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', (e) => {
